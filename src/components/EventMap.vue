@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, computed } from 'vue'
 import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet'
-import L from 'leaflet'
 import type { LeafletMouseEvent } from 'leaflet'
 import { useEventStore } from '../stores/eventStore'
 import { useAuth } from '../composables/useAuth'
-import { EVENT_TYPE_COLORS, type EventType } from '../types/event'
+import { EVENT_TYPE_COLORS } from '../types/event'
 import type { Event } from '../types/event'
+import { createClusterIcon, createSingleMarkerIcon } from '../utils/mapIcons'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
@@ -59,65 +59,6 @@ function handleMarkerClick(event: Event) {
   store.selectEvent(event)
 }
 
-function getClusterIcon(count: number, events: Event[]): L.Icon | L.DivIcon {
-  // Get the most common event type color for the cluster
-  const typeCounts = new Map<EventType, number>()
-  events.forEach(e => {
-    typeCounts.set(e.eventType, (typeCounts.get(e.eventType) || 0) + 1)
-  })
-  let maxType: EventType = events[0]?.eventType || 'Other'
-  let maxCount = 0
-  typeCounts.forEach((c, t) => {
-    if (c > maxCount) {
-      maxCount = c
-      maxType = t
-    }
-  })
-  const color = EVENT_TYPE_COLORS[maxType] || '#6B7280'
-
-  if (count === 1) {
-    return L.icon({
-      iconUrl: `data:image/svg+xml,${encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
-          <path fill="${color}" d="M12 0C7.58 0 4 3.58 4 8c0 5.25 8 13 8 13s8-7.75 8-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
-        </svg>
-      `)}`,
-      iconSize: [32, 32],
-      iconAnchor: [16, 32],
-      popupAnchor: [0, -32]
-    })
-  }
-
-  // Cluster icon with count
-  return L.divIcon({
-    html: `
-      <div class="cluster-marker" style="background-color: ${color}">
-        <span class="cluster-count">${count}</span>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-          <path fill="white" d="M12 0C7.58 0 4 3.58 4 8c0 5.25 8 13 8 13s8-7.75 8-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
-        </svg>
-      </div>
-    `,
-    className: 'cluster-icon',
-    iconSize: [44, 44],
-    iconAnchor: [22, 44],
-    popupAnchor: [0, -44]
-  })
-}
-
-function getSingleMarkerIcon(eventType: string) {
-  const color = EVENT_TYPE_COLORS[eventType as keyof typeof EVENT_TYPE_COLORS] || '#6B7280'
-  return L.icon({
-    iconUrl: `data:image/svg+xml,${encodeURIComponent(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
-        <path fill="${color}" d="M12 0C7.58 0 4 3.58 4 8c0 5.25 8 13 8 13s8-7.75 8-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
-      </svg>
-    `)}`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32]
-  })
-}
 </script>
 
 <template>
@@ -141,7 +82,7 @@ function getSingleMarkerIcon(eventType: string) {
         v-for="group in groupedEvents"
         :key="group.key"
         :lat-lng="[group.lat, group.lng]"
-        :icon="getClusterIcon(group.events.length, group.events) as any"
+        :icon="group.events.length === 1 ? createSingleMarkerIcon(group.events[0]!.eventType) as any : createClusterIcon(group.events.length, group.events) as any"
       >
         <LPopup :options="{ maxWidth: 300, maxHeight: 400 }">
           <div class="popup-content">
@@ -171,7 +112,7 @@ function getSingleMarkerIcon(eventType: string) {
       <LMarker
         v-if="store.newMarkerPosition"
         :lat-lng="[store.newMarkerPosition.lat, store.newMarkerPosition.lng]"
-        :icon="getSingleMarkerIcon('Other')"
+        :icon="createSingleMarkerIcon('Other')"
       />
     </LMap>
   </div>

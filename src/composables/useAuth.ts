@@ -5,15 +5,14 @@ import {
   type User
 } from 'firebase/auth'
 import { auth } from '../firebase/config'
+import { isDevMode } from './useDevMode'
 import { ref, computed } from 'vue'
-
-const IS_DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true'
 
 const currentUser = ref<User | null>(null)
 const loading = ref(true)
 
 // Dev mode: auto-login with mock user
-if (IS_DEV_MODE) {
+if (isDevMode) {
   currentUser.value = {
     email: 'dev@local.test',
     uid: 'dev-user-123'
@@ -34,7 +33,7 @@ export function useAuth() {
     error.value = null
 
     // Dev mode: accept any credentials
-    if (IS_DEV_MODE) {
+    if (isDevMode) {
       currentUser.value = {
         email: email || 'dev@local.test',
         uid: 'dev-user-123'
@@ -54,7 +53,7 @@ export function useAuth() {
     error.value = null
 
     // Dev mode: just clear user
-    if (IS_DEV_MODE) {
+    if (isDevMode) {
       currentUser.value = null
       return
     }
@@ -72,7 +71,7 @@ export function useAuth() {
     loading,
     error,
     isAuthenticated,
-    isDevMode: IS_DEV_MODE,
+    isDevMode: isDevMode,
     signIn,
     signOut
   }

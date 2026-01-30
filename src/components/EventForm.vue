@@ -11,7 +11,8 @@ import {
   type AudienceType,
   type Feedback
 } from '../types/event'
-import ImageUpload from './ImageUpload.vue'
+import EventFormImages from './EventFormImages.vue'
+import EventFormFeedback from './EventFormFeedback.vue'
 
 const store = useEventStore()
 const { uploadImages, uploading } = useImageUpload()
@@ -37,9 +38,6 @@ const form = ref({
 
 const pendingFiles = ref<File[]>([])
 const isSubmitting = ref(false)
-
-// Feedback form
-const newFeedback = ref({ text: '', author: '', company: '' })
 
 const isEditing = computed(() => !!store.editingEvent)
 
@@ -98,7 +96,6 @@ function resetForm() {
     feedback: []
   }
   pendingFiles.value = []
-  newFeedback.value = { text: '', author: '', company: '' }
 }
 
 function handleFilesSelected(files: File[]) {
@@ -113,15 +110,8 @@ function removePendingFile(index: number) {
   pendingFiles.value.splice(index, 1)
 }
 
-function addFeedback() {
-  if (newFeedback.value.text && newFeedback.value.author) {
-    form.value.feedback.push({
-      text: newFeedback.value.text,
-      author: newFeedback.value.author,
-      company: newFeedback.value.company || undefined
-    })
-    newFeedback.value = { text: '', author: '', company: '' }
-  }
+function addFeedbackEntry(entry: Feedback) {
+  form.value.feedback.push(entry)
 }
 
 function removeFeedback(index: number) {
@@ -339,55 +329,19 @@ async function submit() {
           />
         </div>
 
-        <div class="form-group">
-          <label>Images</label>
-          <ImageUpload @files-selected="handleFilesSelected" />
+        <EventFormImages
+          :images="form.images"
+          :pending-files="pendingFiles"
+          @files-selected="handleFilesSelected"
+          @remove-image="removeExistingImage"
+          @remove-pending-file="removePendingFile"
+        />
 
-          <div v-if="form.images.length > 0" class="existing-images">
-            <div v-for="(img, idx) in form.images" :key="img" class="image-preview">
-              <img :src="img" :alt="`Image ${idx + 1}`" />
-              <button type="button" class="remove-btn" @click="removeExistingImage(idx)">&times;</button>
-            </div>
-          </div>
-
-          <div v-if="pendingFiles.length > 0" class="pending-files">
-            <div v-for="(file, idx) in pendingFiles" :key="file.name + idx" class="file-preview">
-              <span>{{ file.name }}</span>
-              <button type="button" class="remove-btn" @click="removePendingFile(idx)">&times;</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Feedback</label>
-          <div v-if="form.feedback.length > 0" class="feedback-list">
-            <div v-for="(fb, idx) in form.feedback" :key="idx" class="feedback-item">
-              <p class="feedback-text">"{{ fb.text }}"</p>
-              <p class="feedback-author">- {{ fb.author }} {{ fb.company ? `(${fb.company})` : '' }}</p>
-              <button type="button" class="remove-btn small" @click="removeFeedback(idx)">&times;</button>
-            </div>
-          </div>
-          <div class="add-feedback">
-            <textarea
-              v-model="newFeedback.text"
-              rows="2"
-              placeholder="Feedback text..."
-            />
-            <div class="feedback-inputs">
-              <input
-                v-model="newFeedback.author"
-                type="text"
-                placeholder="Author name"
-              />
-              <input
-                v-model="newFeedback.company"
-                type="text"
-                placeholder="Company (optional)"
-              />
-              <button type="button" class="btn btn-add-feedback" @click="addFeedback">Add</button>
-            </div>
-          </div>
-        </div>
+        <EventFormFeedback
+          :feedback="form.feedback"
+          @add="addFeedbackEntry"
+          @remove="removeFeedback"
+        />
 
         <div class="form-actions">
           <button type="button" class="btn btn-cancel" @click="close">Cancel</button>
@@ -492,125 +446,6 @@ textarea:focus {
 
 textarea {
   resize: vertical;
-}
-
-.existing-images,
-.pending-files {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.image-preview {
-  position: relative;
-  width: 80px;
-  height: 80px;
-}
-
-.image-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 6px;
-}
-
-.file-preview {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: #f3f4f6;
-  border-radius: 6px;
-  font-size: 0.85rem;
-}
-
-.remove-btn {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #EF4444;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.remove-btn.small {
-  width: 20px;
-  height: 20px;
-  font-size: 14px;
-  position: static;
-}
-
-.file-preview .remove-btn {
-  position: static;
-  width: 20px;
-  height: 20px;
-  font-size: 14px;
-}
-
-.feedback-list {
-  margin-bottom: 12px;
-}
-
-.feedback-item {
-  background: #f9fafb;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 8px;
-  position: relative;
-}
-
-.feedback-text {
-  margin: 0 0 4px;
-  font-size: 0.9rem;
-  font-style: italic;
-}
-
-.feedback-author {
-  margin: 0;
-  font-size: 0.8rem;
-  color: #6B7280;
-}
-
-.feedback-item .remove-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-}
-
-.add-feedback {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.feedback-inputs {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 8px;
-}
-
-.btn-add-feedback {
-  background: #E5E7EB;
-  color: #374151;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-add-feedback:hover {
-  background: #D1D5DB;
 }
 
 .form-actions {

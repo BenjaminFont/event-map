@@ -14,12 +14,11 @@ import { db } from '../firebase/config'
 import type { Event } from '../types/event'
 import { ref } from 'vue'
 import { getSeedEventsWithTimestamp } from '../data/seedEvents'
-
-const IS_DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true'
+import { isDevMode } from './useDevMode'
 const COLLECTION_NAME = 'events'
 
 // Mock data for dev mode - loaded from seed data
-const mockEvents = ref<Event[]>(IS_DEV_MODE ? getSeedEventsWithTimestamp() : [])
+const mockEvents = ref<Event[]>(isDevMode ? getSeedEventsWithTimestamp() : [])
 
 let mockIdCounter = 100
 // Store the subscription callback so dev mode mutations can notify the store
@@ -30,7 +29,7 @@ export function useEvents() {
   const error = ref<string | null>(null)
 
   async function fetchEvents(): Promise<Event[]> {
-    if (IS_DEV_MODE) {
+    if (isDevMode) {
       return mockEvents.value
     }
 
@@ -52,7 +51,7 @@ export function useEvents() {
   }
 
   function subscribeToEvents(callback: (events: Event[]) => void) {
-    if (IS_DEV_MODE) {
+    if (isDevMode) {
       devCallback = callback
       callback(mockEvents.value)
       return () => { devCallback = null }
@@ -69,7 +68,7 @@ export function useEvents() {
   }
 
   async function createEvent(event: Omit<Event, 'id' | 'createdAt'>): Promise<string> {
-    if (IS_DEV_MODE) {
+    if (isDevMode) {
       const newId = String(++mockIdCounter)
       const newEvent: Event = {
         ...event,
@@ -98,7 +97,7 @@ export function useEvents() {
   }
 
   async function updateEvent(id: string, updates: Partial<Omit<Event, 'id' | 'createdAt'>>): Promise<void> {
-    if (IS_DEV_MODE) {
+    if (isDevMode) {
       const idx = mockEvents.value.findIndex(e => e.id === id)
       if (idx !== -1) {
         const existing = mockEvents.value[idx]!
@@ -128,7 +127,7 @@ export function useEvents() {
   }
 
   async function deleteEvent(id: string): Promise<void> {
-    if (IS_DEV_MODE) {
+    if (isDevMode) {
       mockEvents.value = mockEvents.value.filter(e => e.id !== id)
       devCallback?.(mockEvents.value)
       return
