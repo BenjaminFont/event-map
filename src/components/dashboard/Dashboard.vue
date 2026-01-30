@@ -16,20 +16,20 @@ defineProps<{
 const store = useEventStore()
 
 const completedEvents = computed(() =>
-  store.events.filter(e => e.status === 'completed').length
+  store.filteredEvents.filter(e => e.status === 'completed').length
 )
 
 const plannedEvents = computed(() =>
-  store.events.filter(e => e.status === 'planned').length
+  store.filteredEvents.filter(e => e.status === 'planned').length
 )
 
 const totalHours = computed(() =>
-  store.events.reduce((sum, e) => sum + (e.hoursInvested || 0), 0)
+  store.filteredEvents.reduce((sum, e) => sum + (e.hoursInvested || 0), 0)
 )
 
 const uniqueCompanies = computed(() => {
   const companies = new Set<string>()
-  store.events.forEach(e => {
+  store.filteredEvents.forEach(e => {
     if (e.company) companies.add(e.company)
   })
   return companies.size
@@ -37,7 +37,7 @@ const uniqueCompanies = computed(() => {
 
 const allFeedback = computed<Feedback[]>(() => {
   const feedback: Feedback[] = []
-  store.events.forEach(e => {
+  store.filteredEvents.forEach(e => {
     if (e.feedback) {
       feedback.push(...e.feedback)
     }
@@ -59,14 +59,14 @@ const allFeedback = computed<Feedback[]>(() => {
 
     <div class="charts-row">
       <div class="when-section">
-        <WhenChart :events="store.events" />
+        <WhenChart :events="store.filteredEvents" />
       </div>
     </div>
 
     <div class="bottom-row">
-      <EventTypeChart :events="store.events" />
-      <WhatChart :events="store.events" />
-      <WhoChart :events="store.events" />
+      <EventTypeChart :events="store.filteredEvents" />
+      <WhatChart :events="store.filteredEvents" />
+      <WhoChart :events="store.filteredEvents" />
       <FeedbackCarousel :feedback-items="allFeedback" />
     </div>
   </div>

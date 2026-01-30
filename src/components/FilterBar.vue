@@ -19,6 +19,18 @@ const store = useEventStore()
 const { isAuthenticated, signOut, currentUser } = useAuth()
 
 const showLogin = ref(false)
+const dateFrom = ref(store.filterDateFrom || '')
+const dateTo = ref(store.filterDateTo || '')
+
+function onDateChange() {
+  store.setDateFilter(dateFrom.value || null, dateTo.value || null)
+}
+
+function clearDateFilter() {
+  dateFrom.value = ''
+  dateTo.value = ''
+  store.clearDateFilter()
+}
 
 function setFilter(type: EventType | 'All') {
   store.setFilterType(type)
@@ -35,36 +47,77 @@ function handleLogout() {
 
 <template>
   <div class="filter-bar">
-    <div class="left-section">
-      <div class="view-toggle">
-        <button
-          class="toggle-btn"
-          :class="{ active: currentView === 'map' }"
-          @click="emit('change-view', 'map')"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/>
-            <path d="M8 2v16"/>
-            <path d="M16 6v16"/>
-          </svg>
-          Map
-        </button>
-        <button
-          class="toggle-btn"
-          :class="{ active: currentView === 'dashboard' }"
-          @click="emit('change-view', 'dashboard')"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7"/>
-            <rect x="14" y="3" width="7" height="7"/>
-            <rect x="14" y="14" width="7" height="7"/>
-            <rect x="3" y="14" width="7" height="7"/>
-          </svg>
-          Stats
-        </button>
+    <div class="top-row">
+      <div class="left-section">
+        <div class="view-toggle">
+          <button
+            class="toggle-btn"
+            :class="{ active: currentView === 'map' }"
+            @click="emit('change-view', 'map')"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/>
+              <path d="M8 2v16"/>
+              <path d="M16 6v16"/>
+            </svg>
+            Map
+          </button>
+          <button
+            class="toggle-btn"
+            :class="{ active: currentView === 'dashboard' }"
+            @click="emit('change-view', 'dashboard')"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"/>
+              <rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            Stats
+          </button>
+        </div>
+
+        <div class="date-filter">
+          <label class="date-label">From</label>
+          <input
+            type="date"
+            class="date-input"
+            v-model="dateFrom"
+            @change="onDateChange"
+          />
+          <label class="date-label">To</label>
+          <input
+            type="date"
+            class="date-input"
+            v-model="dateTo"
+            @change="onDateChange"
+          />
+          <button
+            v-if="dateFrom || dateTo"
+            class="filter-btn clear-date-btn"
+            @click="clearDateFilter"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
-      <div v-if="currentView === 'map'" class="filters">
+      <div class="actions">
+        <template v-if="isAuthenticated">
+          <button class="btn btn-add" @click="store.openForm()">
+            + Add Event
+          </button>
+          <span class="user-email">{{ currentUser?.email }}</span>
+          <button class="btn btn-logout" @click="handleLogout">Logout</button>
+        </template>
+        <button v-else class="btn btn-login" @click="showLogin = true">
+          Admin Login
+        </button>
+      </div>
+    </div>
+
+    <div v-if="currentView === 'map'" class="bottom-row">
+      <div class="filters">
         <button
           class="filter-btn"
           :class="{ active: store.filterType === 'All' }"
@@ -86,37 +139,30 @@ function handleLogout() {
       </div>
     </div>
 
-    <div class="actions">
-      <template v-if="isAuthenticated">
-        <button class="btn btn-add" @click="store.openForm()">
-          + Add Event
-        </button>
-        <span class="user-email">{{ currentUser?.email }}</span>
-        <button class="btn btn-logout" @click="handleLogout">Logout</button>
-      </template>
-      <button v-else class="btn btn-login" @click="showLogin = true">
-        Admin Login
-      </button>
-    </div>
-
     <LoginForm v-if="showLogin" @close="showLogin = false" />
   </div>
 </template>
 
 <style scoped>
 .filter-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
   background: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  flex-shrink: 0;
+}
+
+.top-row {
+  display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
-  z-index: 1000;
+  padding: 8px 20px;
+}
+
+.bottom-row {
+  border-top: 1px solid #F3F4F6;
+  padding: 4px 20px 8px;
 }
 
 .left-section {
@@ -202,6 +248,41 @@ function handleLogout() {
   display: none;
 }
 
+.date-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.date-label {
+  font-size: 0.8rem;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.date-input {
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  background: white;
+  color: #374151;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.date-input:focus {
+  border-color: #3B82F6;
+}
+
+.clear-date-btn {
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  color: #6B7280;
+  border-color: #ddd;
+}
+
 .actions {
   display: flex;
   align-items: center;
@@ -252,11 +333,10 @@ function handleLogout() {
 }
 
 @media (max-width: 768px) {
-  .filter-bar {
+  .top-row {
     flex-direction: column;
-    height: auto;
-    padding: 10px;
-    gap: 10px;
+    padding: 8px 10px;
+    gap: 8px;
   }
 
   .left-section {
@@ -265,9 +345,17 @@ function handleLogout() {
     align-items: flex-start;
   }
 
+  .bottom-row {
+    padding: 4px 10px 8px;
+  }
+
   .filters {
     width: 100%;
     overflow-x: auto;
+  }
+
+  .date-filter {
+    flex-wrap: wrap;
   }
 
   .actions {

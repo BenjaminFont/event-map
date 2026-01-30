@@ -139,19 +139,10 @@ body,
 .map-wrapper {
   flex: 1;
   position: relative;
-  margin-top: 60px;
 }
 
 .dashboard-wrapper {
   flex: 1;
-  margin-top: 60px;
   overflow: hidden;
-}
-
-@media (max-width: 768px) {
-  .map-wrapper,
-  .dashboard-wrapper {
-    margin-top: 110px;
-  }
 }
 </style>

@@ -7,6 +7,8 @@ export const useEventStore = defineStore('events', () => {
   const events = ref<Event[]>([])
   const selectedEvent = ref<Event | null>(null)
   const filterType = ref<EventType | 'All'>('All')
+  const filterDateFrom = ref<string | null>(null)
+  const filterDateTo = ref<string | null>(null)
   const isFormOpen = ref(false)
   const editingEvent = ref<Event | null>(null)
   const newMarkerPosition = ref<{ lat: number; lng: number } | null>(null)
@@ -14,8 +16,24 @@ export const useEventStore = defineStore('events', () => {
   const { subscribeToEvents, createEvent, updateEvent, deleteEvent, loading, error } = useEvents()
 
   const filteredEvents = computed(() => {
-    if (filterType.value === 'All') return events.value
-    return events.value.filter(e => e.eventType === filterType.value)
+    let result = events.value
+
+    if (filterType.value !== 'All') {
+      result = result.filter(e => e.eventType === filterType.value)
+    }
+
+    const from = filterDateFrom.value
+    const to = filterDateTo.value
+    if (from || to) {
+      result = result.filter(e => {
+        const eventEnd = e.endDate || e.date
+        if (from && eventEnd < from) return false
+        if (to && e.date > to) return false
+        return true
+      })
+    }
+
+    return result
   })
 
   function initializeSubscription() {
@@ -48,10 +66,22 @@ export const useEventStore = defineStore('events', () => {
     filterType.value = type
   }
 
+  function setDateFilter(from: string | null, to: string | null) {
+    filterDateFrom.value = from || null
+    filterDateTo.value = to || null
+  }
+
+  function clearDateFilter() {
+    filterDateFrom.value = null
+    filterDateTo.value = null
+  }
+
   return {
     events,
     selectedEvent,
     filterType,
+    filterDateFrom,
+    filterDateTo,
     isFormOpen,
     editingEvent,
     newMarkerPosition,
@@ -64,6 +94,8 @@ export const useEventStore = defineStore('events', () => {
     closeForm,
     setNewMarkerPosition,
     setFilterType,
+    setDateFilter,
+    clearDateFilter,
     createEvent,
     updateEvent,
     deleteEvent
