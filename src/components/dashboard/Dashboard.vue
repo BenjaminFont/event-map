@@ -5,7 +5,6 @@ import StatsCard from './StatsCard.vue'
 import WhenChart from './WhenChart.vue'
 import WhatChart from './WhatChart.vue'
 import WhoChart from './WhoChart.vue'
-import WhereMap from './WhereMap.vue'
 import FeedbackCarousel from './FeedbackCarousel.vue'
 import type { Feedback } from '../../types/event'
 
@@ -61,9 +60,6 @@ const allFeedback = computed<Feedback[]>(() => {
       <div class="when-section">
         <WhenChart :events="store.events" />
       </div>
-      <div class="where-section">
-        <WhereMap :events="store.events" />
-      </div>
     </div>
 
     <div class="bottom-row">
@@ -96,14 +92,10 @@ const allFeedback = computed<Feedback[]>(() => {
 }
 
 .charts-row {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 16px;
   margin-bottom: 24px;
 }
 
-.when-section,
-.where-section {
+.when-section {
   min-height: 300px;
 }
 

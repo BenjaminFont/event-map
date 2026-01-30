@@ -140,7 +140,6 @@ async function submit() {
     const eventData = {
       title: form.value.title,
       date: form.value.date,
-      endDate: form.value.endDate || undefined,
       location: {
         name: form.value.locationName,
         lat: form.value.lat,
@@ -148,14 +147,16 @@ async function submit() {
       },
       eventType: form.value.eventType,
       eventName: form.value.eventName,
-      description: form.value.description || undefined,
-      reference: form.value.reference || undefined,
       images: form.value.images,
       status: form.value.status,
-      hoursInvested: form.value.hoursInvested || undefined,
-      company: form.value.company || undefined,
       audience: form.value.audience,
-      feedback: form.value.feedback.length > 0 ? form.value.feedback : undefined
+      // Use empty string/array/0 for optional fields instead of undefined (Firestore doesn't accept undefined)
+      endDate: form.value.endDate || '',
+      description: form.value.description || '',
+      reference: form.value.reference || '',
+      hoursInvested: form.value.hoursInvested || 0,
+      company: form.value.company || '',
+      feedback: form.value.feedback.length > 0 ? form.value.feedback : []
     }
 
     let eventId: string
