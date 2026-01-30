@@ -22,6 +22,8 @@ const COLLECTION_NAME = 'events'
 const mockEvents = ref<Event[]>(IS_DEV_MODE ? getSeedEventsWithTimestamp() : [])
 
 let mockIdCounter = 100
+// Store the subscription callback so dev mode mutations can notify the store
+let devCallback: ((events: Event[]) => void) | null = null
 
 export function useEvents() {
   const loading = ref(false)
@@ -51,10 +53,9 @@ export function useEvents() {
 
   function subscribeToEvents(callback: (events: Event[]) => void) {
     if (IS_DEV_MODE) {
-      // Immediately call with mock data
+      devCallback = callback
       callback(mockEvents.value)
-      // Return a no-op unsubscribe function
-      return () => {}
+      return () => { devCallback = null }
     }
 
     const q = query(collection(db, COLLECTION_NAME), orderBy('date', 'desc'))
@@ -76,6 +77,7 @@ export function useEvents() {
         createdAt: Timestamp.now()
       }
       mockEvents.value = [newEvent, ...mockEvents.value]
+      devCallback?.(mockEvents.value)
       return newId
     }
 
@@ -107,6 +109,7 @@ export function useEvents() {
           createdAt: existing.createdAt
         }
         mockEvents.value = [...mockEvents.value] // Trigger reactivity
+        devCallback?.(mockEvents.value)
       }
       return
     }
@@ -127,6 +130,7 @@ export function useEvents() {
   async function deleteEvent(id: string): Promise<void> {
     if (IS_DEV_MODE) {
       mockEvents.value = mockEvents.value.filter(e => e.id !== id)
+      devCallback?.(mockEvents.value)
       return
     }
 

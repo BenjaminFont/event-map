@@ -5,6 +5,7 @@ import StatsCard from './StatsCard.vue'
 import WhenChart from './WhenChart.vue'
 import WhatChart from './WhatChart.vue'
 import WhoChart from './WhoChart.vue'
+import EventTypeChart from './EventTypeChart.vue'
 import FeedbackCarousel from './FeedbackCarousel.vue'
 import type { Feedback } from '../../types/event'
 
@@ -63,6 +64,7 @@ const allFeedback = computed<Feedback[]>(() => {
     </div>
 
     <div class="bottom-row">
+      <EventTypeChart :events="store.events" />
       <WhatChart :events="store.events" />
       <WhoChart :events="store.events" />
       <FeedbackCarousel :feedback-items="allFeedback" />
@@ -101,7 +103,7 @@ const allFeedback = computed<Feedback[]>(() => {
 
 .bottom-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
 
