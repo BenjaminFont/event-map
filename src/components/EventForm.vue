@@ -489,4 +489,19 @@ textarea {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+@media (max-width: 480px) {
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .form-overlay {
+    padding: 10px;
+  }
+
+  .event-form {
+    max-height: 95vh;
+  }
+}
 </style>

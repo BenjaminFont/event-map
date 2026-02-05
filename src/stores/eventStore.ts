@@ -6,7 +6,7 @@ import { useEvents } from '../composables/useEvents'
 export const useEventStore = defineStore('events', () => {
   const events = ref<Event[]>([])
   const selectedEvent = ref<Event | null>(null)
-  const filterType = ref<EventType | 'All'>('All')
+  const activeFilters = ref<EventType[]>([])
   const filterDateFrom = ref<string | null>(null)
   const filterDateTo = ref<string | null>(null)
   const isFormOpen = ref(false)
@@ -18,8 +18,8 @@ export const useEventStore = defineStore('events', () => {
   const filteredEvents = computed(() => {
     let result = events.value
 
-    if (filterType.value !== 'All') {
-      result = result.filter(e => e.eventType === filterType.value)
+    if (activeFilters.value.length > 0) {
+      result = result.filter(e => activeFilters.value.includes(e.eventType))
     }
 
     const from = filterDateFrom.value
@@ -62,8 +62,17 @@ export const useEventStore = defineStore('events', () => {
     openForm()
   }
 
-  function setFilterType(type: EventType | 'All') {
-    filterType.value = type
+  function toggleFilter(type: EventType) {
+    const idx = activeFilters.value.indexOf(type)
+    if (idx >= 0) {
+      activeFilters.value = activeFilters.value.filter(t => t !== type)
+    } else {
+      activeFilters.value = [...activeFilters.value, type]
+    }
+  }
+
+  function clearFilters() {
+    activeFilters.value = []
   }
 
   function setDateFilter(from: string | null, to: string | null) {
@@ -79,7 +88,7 @@ export const useEventStore = defineStore('events', () => {
   return {
     events,
     selectedEvent,
-    filterType,
+    activeFilters,
     filterDateFrom,
     filterDateTo,
     isFormOpen,
@@ -93,7 +102,8 @@ export const useEventStore = defineStore('events', () => {
     openForm,
     closeForm,
     setNewMarkerPosition,
-    setFilterType,
+    toggleFilter,
+    clearFilters,
     setDateFilter,
     clearDateFilter,
     createEvent,

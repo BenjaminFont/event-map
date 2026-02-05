@@ -8,3 +8,4 @@
 | Refactoring: Split EventForm | [refactoring-split-event-form.md](refactoring-split-event-form.md) | Draft |
 | Refactoring: Consolidate Dev Mode | [refactoring-consolidate-dev-mode.md](refactoring-consolidate-dev-mode.md) | Draft |
 | Refactoring: Extract Map Icons | [refactoring-extract-map-icons.md](refactoring-extract-map-icons.md) | Draft |
+| Read-Only User Role | [read-only-user-role.md](read-only-user-role.md) | Draft |

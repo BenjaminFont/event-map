@@ -10,7 +10,7 @@ import Dashboard from './components/dashboard/Dashboard.vue'
 import LoginForm from './components/LoginForm.vue'
 
 const store = useEventStore()
-const { isAuthenticated, loading } = useAuth()
+const { isAuthenticated, isAdmin, loading } = useAuth()
 
 type ViewType = 'map' | 'dashboard'
 const currentView = ref<ViewType>('map')
@@ -52,7 +52,7 @@ function setView(view: ViewType) {
       <Dashboard headline="Event Overview" />
     </div>
 
-    <EventForm v-if="store.isFormOpen" />
+    <EventForm v-if="store.isFormOpen && isAdmin" />
   </div>
 </template>
 
@@ -143,6 +143,7 @@ body,
 
 .dashboard-wrapper {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 </style>

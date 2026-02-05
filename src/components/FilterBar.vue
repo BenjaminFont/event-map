@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useEventStore } from '../stores/eventStore'
 import { useAuth } from '../composables/useAuth'
-import { EVENT_TYPES, EVENT_TYPE_COLORS, type EventType } from '../types/event'
+import { EVENT_TYPES, EVENT_TYPE_COLORS, type EventType, type UserRole } from '../types/event'
 import { ref } from 'vue'
 import LoginForm from './LoginForm.vue'
 
@@ -16,7 +16,7 @@ const emit = defineEmits<{
 }>()
 
 const store = useEventStore()
-const { isAuthenticated, signOut, currentUser } = useAuth()
+const { isAuthenticated, isAdmin, signOut, currentUser, isDevMode: devMode, devRole, setDevRole } = useAuth()
 
 const showLogin = ref(false)
 const dateFrom = ref(store.filterDateFrom || '')
@@ -32,8 +32,12 @@ function clearDateFilter() {
   store.clearDateFilter()
 }
 
-function setFilter(type: EventType | 'All') {
-  store.setFilterType(type)
+function toggleFilter(type: EventType) {
+  store.toggleFilter(type)
+}
+
+function clearFilters() {
+  store.clearFilters()
 }
 
 function getTypeColor(type: EventType): string {
@@ -104,10 +108,19 @@ function handleLogout() {
 
       <div class="actions">
         <template v-if="isAuthenticated">
-          <button class="btn btn-add" @click="store.openForm()">
+          <button v-if="isAdmin" class="btn btn-add" @click="store.openForm()">
             + Add Event
           </button>
           <span class="user-email">{{ currentUser?.email }}</span>
+          <select
+            v-if="devMode"
+            class="role-select"
+            :value="devRole"
+            @change="setDevRole(($event.target as HTMLSelectElement).value as UserRole)"
+          >
+            <option value="admin">Admin</option>
+            <option value="readonly">Read-only</option>
+          </select>
           <button class="btn btn-logout" @click="handleLogout">Logout</button>
         </template>
         <button v-else class="btn btn-login" @click="showLogin = true">
@@ -120,8 +133,8 @@ function handleLogout() {
       <div class="filters">
         <button
           class="filter-btn"
-          :class="{ active: store.filterType === 'All' }"
-          @click="setFilter('All')"
+          :class="{ active: store.activeFilters.length === 0 }"
+          @click="clearFilters"
         >
           All
         </button>
@@ -129,9 +142,9 @@ function handleLogout() {
           v-for="type in EVENT_TYPES"
           :key="type"
           class="filter-btn"
-          :class="{ active: store.filterType === type }"
-          :style="store.filterType === type ? { backgroundColor: getTypeColor(type), color: 'white' } : {}"
-          @click="setFilter(type)"
+          :class="{ active: store.activeFilters.includes(type) }"
+          :style="store.activeFilters.includes(type) ? { backgroundColor: getTypeColor(type), color: 'white' } : {}"
+          @click="toggleFilter(type)"
         >
           <span class="color-dot" :style="{ backgroundColor: getTypeColor(type) }"></span>
           {{ type }}
@@ -332,17 +345,47 @@ function handleLogout() {
   color: #666;
 }
 
+.role-select {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  background: #FEF3C7;
+  color: #92400E;
+  cursor: pointer;
+}
+
 @media (max-width: 768px) {
   .top-row {
     flex-direction: column;
     padding: 8px 10px;
-    gap: 8px;
+    gap: 6px;
   }
 
   .left-section {
     width: 100%;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .view-toggle {
+    flex-shrink: 0;
+  }
+
+  .date-filter {
+    flex: 1;
+    min-width: 0;
+    justify-content: flex-end;
+  }
+
+  .date-input {
+    width: 110px;
+    min-width: 0;
+    font-size: 0.8rem;
+    padding: 4px 6px;
   }
 
   .bottom-row {
@@ -352,10 +395,12 @@ function handleLogout() {
   .filters {
     width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
 
-  .date-filter {
-    flex-wrap: wrap;
+  .filters::-webkit-scrollbar {
+    display: none;
   }
 
   .actions {

@@ -13,7 +13,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import 'leaflet.markercluster'
 
 const store = useEventStore()
-const { isAuthenticated } = useAuth()
+const { isAdmin } = useAuth()
 
 const germanCenter: [number, number] = [51.1657, 10.4515]
 const defaultZoom = 6
@@ -50,7 +50,7 @@ onUnmounted(() => {
 })
 
 function handleMapClick(e: LeafletMouseEvent) {
-  if (isAuthenticated.value) {
+  if (isAdmin.value) {
     store.setNewMarkerPosition(e.latlng.lat, e.latlng.lng)
   }
 }

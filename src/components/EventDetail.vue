@@ -5,7 +5,7 @@ import { useAuth } from '../composables/useAuth'
 import { EVENT_TYPE_COLORS } from '../types/event'
 
 const store = useEventStore()
-const { isAuthenticated } = useAuth()
+const { isAdmin } = useAuth()
 
 const event = computed(() => store.selectedEvent)
 
@@ -88,7 +88,7 @@ function openImage(url: string) {
       </div>
     </div>
 
-    <div v-if="isAuthenticated" class="detail-actions">
+    <div v-if="isAdmin" class="detail-actions">
       <button class="btn btn-edit" @click="edit">Edit</button>
       <button class="btn btn-delete" @click="handleDelete">Delete</button>
     </div>
@@ -238,6 +238,19 @@ function openImage(url: string) {
 @media (max-width: 768px) {
   .event-detail {
     width: 100%;
+  }
+
+  .detail-header {
+    padding: 16px;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
+  }
+
+  .close-btn {
+    font-size: 28px;
+    padding: 4px 8px;
   }
 }
 </style>

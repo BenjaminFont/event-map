@@ -79,3 +79,10 @@ export const STATUS_COLORS: Record<EventStatus, string> = {
   'completed': '#10B981',  // green
   'planned': '#9CA3AF'     // gray
 }
+
+export type UserRole = 'admin' | 'readonly'
+
+export interface UserProfile {
+  uid: string
+  role: UserRole
+}

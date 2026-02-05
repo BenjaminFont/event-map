@@ -1,13 +1,27 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
     // Events collection
     match /events/{eventId} {
-      // Anyone can read events
-      allow read: if true;
+      // Any authenticated user can read events
+      allow read: if request.auth != null;
 
-      // Only authenticated users can write
-      allow create, update, delete: if request.auth != null;
+      // Only admins can write
+      allow create, update, delete: if request.auth != null && isAdmin();
+    }
+
+    // Users collection (role profiles)
+    match /users/{userId} {
+      // Users can read their own profile
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // No client writes — roles managed via Firebase Console
+      allow write: if false;
     }
   }
 }
